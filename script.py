@@ -1,3 +1,7 @@
+"""
+Xavier Schmitt
+University of Luxembourg
+"""
 import sys
 
 
@@ -87,6 +91,40 @@ def _find_shift_a(expected_tab, result_tab, index_exp, index_res):
     return _find_shift(expected_tab, result_tab, index_exp, index_res)
 
 
+def _find_shift_b(expected_tab, result_tab, index_exp, index_res):
+    decal_exp = 0
+    decal_res = 0
+    try:
+        exp_fea = expected_tab[index_exp]
+    except IndexError, e:
+        return
+
+    try:
+        res_fea = result_tab[index_res]
+    except IndexError, e:
+        res_fea = result_tab[index_res - 1]
+
+    while res_fea[0] in exp_fea[0]:
+        decal_res += 1
+        if exp_fea[0].endswith(res_fea[0]):
+            break
+        res_fea = result_tab[index_res + decal_res]
+
+    if decal_res > 0:
+        return 1, decal_res
+
+    while exp_fea[0] in res_fea[0]:
+        decal_exp += 1
+        if res_fea[0].endswith(exp_fea[0]):
+            break
+        exp_fea = expected_tab[index_exp + decal_exp]
+
+    if decal_exp > 0:
+        return decal_exp, 1
+
+    return _find_shift(expected_tab, result_tab, index_exp, index_res)
+
+
 def _find_shift(expected_tab, result_tab, index_exp, index_res):
     decal_exp = 0
     decal_res = 0
@@ -100,6 +138,9 @@ def _find_shift(expected_tab, result_tab, index_exp, index_res):
         res_fea = result_tab[index_res]
     except IndexError, ie:
         res_fea = result_tab[index_res - 1]
+
+    # if exp_fea[0] == res_fea[0]:
+    #     return decal_exp, decal_res
 
     # Case just one shift
     # shift exp
@@ -141,6 +182,7 @@ def _find_shift(expected_tab, result_tab, index_exp, index_res):
                 return 1, decal_res
 
 
+    # print 'pas trouve la exp:' + index_exp + '  res: ' + index_res
     return 1, 1
 
 
@@ -175,9 +217,11 @@ def add_result_to_expected(expected_tab, result_tab):
             index_res += 1
             continue
         elif exp_fea[0] == '-DOCSTART-':
+            print_exp(exp_fea, 'O')
             index_exp += 1
             continue
         elif exp_fea[0] == res_fea[0]:
+            print_exp(exp_fea, res_fea[-1])
             index_res += 1
             index_exp += 1
             continue
@@ -192,10 +236,13 @@ def add_result_to_expected(expected_tab, result_tab):
             for i in range(0, decal_exp):
                 exp_fea = expected_tab[index_exp + i]
                 if exp_fea[0] != '':
-                    pass
+                    print_exp(exp_fea, 'O')
             index_res += decal_res
             index_exp += decal_exp
-    return errors
+
+def print_exp(tab, tag):
+    print ' '.join([str(x) for x in tab]) + ' ' + tag
+
 
 def merge_files(expected_file, result_file):
 
@@ -203,7 +250,7 @@ def merge_files(expected_file, result_file):
     result_tab = _file_to_tab(result_file)
 
     try:
-        print add_result_to_expected(expected_tab, result_tab)
+        add_result_to_expected(expected_tab, result_tab)
     except:
         pass
 
